@@ -1,5 +1,6 @@
 package com.lafin.userservice.service;
 
+import com.lafin.userservice.client.OrderServiceClient;
 import com.lafin.userservice.dto.UserDto;
 import com.lafin.userservice.repository.UserEntity;
 import com.lafin.userservice.repository.UserRepository;
@@ -28,7 +29,7 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final Environment env;
-    private final RestTemplate restTemplate;
+    private final OrderServiceClient orderServiceClient;
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
@@ -67,11 +68,7 @@ public class UserServiceImpl implements UserService {
         UserDto userDto = mapper.map(userEntity, UserDto.class);
 
         String orderUrl = String.format(env.getProperty("order_service.url"), userId);
-        ResponseEntity<List<ResponseOrder>> orderListResponse = restTemplate.exchange(orderUrl,
-            HttpMethod.GET,
-            null,
-            new ParameterizedTypeReference<List<ResponseOrder>>() {});
-        List<ResponseOrder> orders = orderListResponse.getBody();
+        List<ResponseOrder> orders = orderServiceClient.getOrders(userId);
         userDto.setOrders(orders);
 
         return userDto;
